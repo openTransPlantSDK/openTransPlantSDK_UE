@@ -5,9 +5,12 @@
 #include<Engine/Engine.h>
 #include<Kismet/GameplayStatics.h>
 
+#include<openTransPlantSDK_UE/util/string/TString.h>
+#include<openTransPlantSDK_UE/ui/scene/TScene.h>
+
 void TSceneMgr::replaceScene(FString name)
 {
-	TSceneMgr::getInst()->replaceScene(TCHAR_TO_UTF8(*name));
+	TSceneMgr::getInst()->replaceScene(oT::util::TString(name));
 }
 
 namespace oT
@@ -26,9 +29,30 @@ namespace oT
 			return SceneMgr::mInst;
 		}
 
-		void SceneMgr::replaceScene(std::string name)
+		SceneMgr::SceneMgr()
 		{
-			UGameplayStatics::OpenLevel(GWorld->GetGameInstance(),FName(*FString(name.c_str())));
+
+		}
+
+		TScene* SceneMgr::getActiveScene()
+		{
+			return this->mActiveScene;
+		}
+
+		void SceneMgr::replaceScene(util::TString name)
+		{
+			auto scene=new TScene();
+			scene->setName(name.string());
+			UGameplayStatics::OpenLevel(GWorld->GetGameInstance(),name.toFName());
+
+			auto oldScene = this->mActiveScene;
+			if (oldScene)
+			{
+				oldScene->beforeDestroy();
+				delete oldScene;
+			}
+
+			this->mActiveScene = scene;
 		}
 	}
 }
